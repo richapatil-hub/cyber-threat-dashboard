@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cyber Threat Intelligence Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="logo">
+        <div class="logo-icon">&#128737;</div>
+        <div class="logo-text">CyberGuard<br><span>Intelligence</span></div>
+      </div>
+      <nav>
+        <p class="nav-section">Main</p>
+        <a href="index.html" class="nav-item active">&#127968; Dashboard</a>
+        <a href="ip-checker.html" class="nav-item">&#128269; IP / URL Checker</a>
+        <p class="nav-section">AI Tools</p>
+        <a href="ai-analyst.html" class="nav-item">&#129302; AI Analyst</a>
+        <p class="nav-section">Monitor</p>
+        <a href="news.html" class="nav-item">&#128240; News Feed</a>
+        <a href="#" class="nav-item">&#128276; Alerts <span class="alert-count">3</span></a>
+      </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+      <header class="topbar">
+        <h1>Dashboard Overview</h1>
+        <div class="topbar-right">
+          <span class="live-status">&#9679; Live monitoring</span>
+          <span class="alert-badge">&#9888; 3 critical alerts</span>
+        </div>
+      </header>
+
+      <div class="content">
+
+        <!-- STAT CARDS -->
+        <p class="section-label">Threat summary — last 24 hours</p>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <p class="stat-label">Total threats</p>
+            <p class="stat-value white">12,847</p>
+            <p class="stat-change red">&#8593; +18% vs yesterday</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">Malware detected</p>
+            <p class="stat-value red">4,231</p>
+            <p class="stat-change red">&#8593; +24% vs yesterday</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">Phishing attempts</p>
+            <p class="stat-value yellow">3,190</p>
+            <p class="stat-change red">&#8593; +11% vs yesterday</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">DDoS attacks</p>
+            <p class="stat-value blue">1,043</p>
+            <p class="stat-change green">&#8595; -6% vs yesterday</p>
+          </div>
+        </div>
+
+        <!-- CHARTS ROW -->
+        <div class="charts-grid">
+          <div class="card">
+            <p class="card-title">&#128202; Threat activity — 12 hours</p>
+            <canvas id="timelineChart"></canvas>
+          </div>
+          <div class="card">
+            <p class="card-title">&#127963; Threat distribution</p>
+            <canvas id="donutChart"></canvas>
+          </div>
+        </div>
+
+        <!-- THREAT TABLE -->
+        <p class="section-label">Recent threat log</p>
+        <div class="table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>Threat name</th>
+                <th>Source IP</th>
+                <th>Type</th>
+                <th>Severity</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Emotet botnet C2 traffic</td>
+                <td class="mono">192.168.4.21</td>
+                <td class="muted">Malware</td>
+                <td><span class="badge badge-red">Critical</span></td>
+                <td><a href="ai-analyst.html?q=Emotet+botnet" class="action-btn">Analyze</a></td>
+              </tr>
+              <tr>
+                <td>Spear phishing — executive</td>
+                <td class="mono">45.83.122.9</td>
+                <td class="muted">Phishing</td>
+                <td><span class="badge badge-yellow">High</span></td>
+                <td><a href="ai-analyst.html?q=spear+phishing" class="action-btn">Analyze</a></td>
+              </tr>
+              <tr>
+                <td>SSH brute force attempt</td>
+                <td class="mono">103.77.246.2</td>
+                <td class="muted">Brute Force</td>
+                <td><span class="badge badge-yellow">High</span></td>
+                <td><a href="ai-analyst.html?q=SSH+brute+force" class="action-btn">Analyze</a></td>
+              </tr>
+              <tr>
+                <td>DNS tunneling detected</td>
+                <td class="mono">8.218.34.101</td>
+                <td class="muted">Exfiltration</td>
+                <td><span class="badge badge-blue">Medium</span></td>
+                <td><a href="ai-analyst.html?q=DNS+tunneling" class="action-btn">Analyze</a></td>
+              </tr>
+              <tr>
+                <td>Port scan sweep</td>
+                <td class="mono">185.220.101.47</td>
+                <td class="muted">Reconnaissance</td>
+                <td><span class="badge badge-green">Low</span></td>
+                <td><a href="ai-analyst.html?q=port+scan" class="action-btn">Analyze</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

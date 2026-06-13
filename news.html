@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>News Feed — CyberGuard</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">&#128737;</div>
+      <div class="logo-text">CyberGuard<br><span>Intelligence</span></div>
+    </div>
+    <nav>
+      <p class="nav-section">Main</p>
+      <a href="index.html" class="nav-item">&#127968; Dashboard</a>
+      <a href="ip-checker.html" class="nav-item">&#128269; IP / URL Checker</a>
+      <p class="nav-section">AI Tools</p>
+      <a href="ai-analyst.html" class="nav-item">&#129302; AI Analyst</a>
+      <p class="nav-section">Monitor</p>
+      <a href="news.html" class="nav-item active">&#128240; News Feed</a>
+      <a href="#" class="nav-item">&#128276; Alerts <span class="alert-count">3</span></a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <h1>Cyber Threat News Feed</h1>
+      <div class="topbar-right">
+        <span class="live-status">&#9679; Live</span>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- Filter bar -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;" id="filterBar">
+        <button class="action-btn" style="border-color:#1f6feb;color:#58a6ff;" onclick="filterNews('all',this)">All</button>
+        <button class="action-btn" onclick="filterNews('breach',this)">Data breach</button>
+        <button class="action-btn" onclick="filterNews('malware',this)">Malware</button>
+        <button class="action-btn" onclick="filterNews('vulnerability',this)">Vulnerability</button>
+        <button class="action-btn" onclick="filterNews('ransomware',this)">Ransomware</button>
+        <button class="action-btn" onclick="filterNews('apt',this)">APT / Nation state</button>
+      </div>
+
+      <!-- Search -->
+      <div style="margin-bottom:14px;">
+        <input class="inp" id="searchInp" placeholder="&#128269;  Search news..." oninput="renderNews()" style="max-width:400px;"/>
+      </div>
+
+      <!-- News grid -->
+      <div id="newsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;"></div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+const articles = [
+  { cat:'breach',        title:'Major healthcare provider suffers 12M record breach via MOVEit exploit',        desc:'Attackers exfiltrated patient records including SSNs and medical histories across 14 US states.', tag:'Data breach',    tagCls:'badge-red',    time:'18 min ago', source:'BleepingComputer' },
+  { cat:'ransomware',    title:'LockBit 4.0 emerges with new evasion techniques targeting critical infrastructure', desc:'New variant uses novel anti-analysis techniques targeting energy and water treatment facilities.',  tag:'Ransomware',     tagCls:'badge-yellow', time:'42 min ago', source:'The Hacker News' },
+  { cat:'vulnerability', title:'Critical zero-day in Cisco IOS XE allows unauthenticated remote code execution',  desc:'CVE-2026-4812 affects over 40,000 enterprise routers. CISA issued an emergency directive.',         tag:'Critical CVE',   tagCls:'badge-red',    time:'1 hr ago',   source:'CISA Advisory' },
+  { cat:'apt',           title:'APT41 linked to supply chain attack on software vendors in Southeast Asia',        desc:'Compromised build pipelines of three vendors, injecting backdoors into legitimate updates.',        tag:'Nation state',   tagCls:'badge-purple', time:'2 hr ago',   source:'Mandiant' },
+  { cat:'malware',       title:'New Emotet campaign uses AI-generated phishing emails to bypass filters',          desc:'Emotet botnet using conversational phishing emails nearly indistinguishable from legitimate mail.', tag:'Malware',        tagCls:'badge-yellow', time:'3 hr ago',   source:'Krebs on Security' },
+  { cat:'vulnerability', title:'Microsoft patches 4 zero-days in June Patch Tuesday — one under active exploit',  desc:'78 vulnerabilities addressed; CVE-2026-3291 Windows CLFS driver flaw exploited in the wild.',     tag:'Patch Tuesday',  tagCls:'badge-blue',   time:'5 hr ago',   source:'Microsoft MSRC' },
+  { cat:'breach',        title:'Telecom giant confirms SIM-swapping attack exposed 800,000 customers',            desc:'Insider access exploited to bypass 2FA for cryptocurrency accounts at a major US carrier.',         tag:'Data breach',    tagCls:'badge-red',    time:'7 hr ago',   source:'The Hacker News' },
+  { cat:'apt',           title:'North Korean Lazarus Group targets crypto exchanges with fake job offers',         desc:'Operation DreamJob continues with fake LinkedIn recruiter profiles used to deliver malware.',       tag:'APT / Lazarus',  tagCls:'badge-purple', time:'9 hr ago',   source:'ESET Research' },
+];
+
+let activeFilter = 'all';
+
+function renderNews() {
+  const search = document.getElementById('searchInp').value.toLowerCase();
+  const filtered = articles.filter(a => {
+    const matchFilter = activeFilter === 'all' || a.cat === activeFilter;
+    const matchSearch = !search || a.title.toLowerCase().includes(search) || a.desc.toLowerCase().includes(search);
+    return matchFilter && matchSearch;
+  });
+
+  document.getElementById('newsGrid').innerHTML = filtered.map(a => `
+    <div class="card" style="cursor:pointer;" onclick="analyzeNews('${encodeURIComponent(a.title)}')">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span class="badge ${a.tagCls}">${a.tag}</span>
+        <span style="font-size:10px;color:#484f58;">${a.time}</span>
+      </div>
+      <p style="font-size:13px;font-weight:500;color:#e6edf3;margin-bottom:6px;line-height:1.4;">${a.title}</p>
+      <p style="font-size:11px;color:#8b949e;line-height:1.5;margin-bottom:10px;">${a.desc}</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:10px;color:#484f58;">${a.source}</span>
+        <span style="font-size:11px;color:#58a6ff;">Ask AI &#8599;</span>
+      </div>
+    </div>
+  `).join('') || '<p style="color:#484f58;font-size:13px;">No articles found.</p>';
+}
+
+function filterNews(cat, el) {
+  activeFilter = cat;
+  document.querySelectorAll('#filterBar button').forEach(b => {
+    b.style.borderColor = ''; b.style.color = '';
+  });
+  el.style.borderColor = '#1f6feb'; el.style.color = '#58a6ff';
+  renderNews();
+}
+
+function analyzeNews(title) {
+  window.location.href = 'ai-analyst.html?q=Explain+this+news+and+what+action+to+take:+' + title;
+}
+
+renderNews();
+</script>
+</body>
+</html>

@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Analyst — CyberGuard</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <div class="logo">
+          <div class="logo-icon">&#128737;</div>
+          <div class="logo-text">CyberGuard<br /><span>Intelligence</span></div>
+        </div>
+        <nav>
+          <p class="nav-section">Main</p>
+          <a href="index.html" class="nav-item">&#127968; Dashboard</a>
+          <a href="ip-checker.html" class="nav-item"
+            >&#128269; IP / URL Checker</a
+          >
+          <p class="nav-section">AI Tools</p>
+          <a href="ai-analyst.html" class="nav-item active"
+            >&#129302; AI Analyst</a
+          >
+          <p class="nav-section">Monitor</p>
+          <a href="news.html" class="nav-item">&#128240; News Feed</a>
+          <a href="#" class="nav-item"
+            >&#128276; Alerts <span class="alert-count">3</span></a
+          >
+        </nav>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <h1>AI Threat Analyst</h1>
+          <div class="topbar-right">
+            <span style="font-size: 12px; color: #bc8cff"
+              >&#129302; Powered by Claude API</span
+            >
+          </div>
+        </header>
+
+        <div class="content">
+          <div class="card" style="max-width: 860px">
+            <!-- Chat window -->
+            <div class="chat-wrap" id="chatArea">
+              <div class="msg ai">
+                <div
+                  class="msg-avatar"
+                  style="background: rgba(188, 140, 255, 0.15)"
+                >
+                  &#129302;
+                </div>
+                <div class="msg-bubble">
+                  Hello! I am <strong>CyberGuard AI</strong> — your expert
+                  cybersecurity analyst.<br /><br />
+                  You can ask me to:<br />
+                  &bull; Analyze a threat log or error message<br />
+                  &bull; Explain any cybersecurity term or attack<br />
+                  &bull; Give you remediation steps for an incident<br />
+                  &bull; Score the risk of an IP or domain<br /><br />
+                  <span style="color: #484f58; font-size: 12px"
+                    >Paste any log, IP, or question below and press Enter.</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick prompts -->
+            <div
+              style="
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                padding: 0 1rem 12px;
+              "
+            >
+              <button
+                class="action-btn"
+                onclick="quickAsk('What is ransomware and how does it spread?')"
+              >
+                What is ransomware?
+              </button>
+              <button
+                class="action-btn"
+                onclick="
+                  quickAsk(
+                    'Analyze: Failed password for root from 185.220.101.47 port 43812 ssh2 — 847 attempts in 2 min',
+                  )
+                "
+              >
+                Analyze SSH log
+              </button>
+              <button
+                class="action-btn"
+                onclick="
+                  quickAsk(
+                    'Give me 5 steps to protect a server from DDoS attacks',
+                  )
+                "
+              >
+                DDoS protection
+              </button>
+              <button
+                class="action-btn"
+                onclick="quickAsk('What is a zero-day vulnerability?')"
+              >
+                What is zero-day?
+              </button>
+              <button
+                class="action-btn"
+                onclick="quickAsk('Explain the MITRE ATT&CK framework')"
+              >
+                MITRE ATT&CK
+              </button>
+            </div>
+
+            <!-- Input row -->
+            <div
+              style="
+                display: flex;
+                gap: 8px;
+                padding: 12px 1rem;
+                border-top: 1px solid #30363d;
+                background: #161b22;
+                border-radius: 0 0 8px 8px;
+              "
+            >
+              <textarea
+                id="chatInput"
+                class="inp"
+                rows="1"
+                placeholder="Ask about any threat, paste a log, or enter an IP..."
+                style="
+                  resize: none;
+                  min-height: 38px;
+                  max-height: 120px;
+                  line-height: 1.5;
+                "
+                onkeydown="handleKey(event)"
+              ></textarea>
+              <button
+                class="btn btn-purple"
+                onclick="sendMessage()"
+                id="sendBtn"
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      // ── IMPORTANT: Replace with your real Anthropic API key ──────────────────
+      const API_KEY = "sk-ant-api03-PVL...pAAA";
+
+      const chatArea = document.getElementById("chatArea");
+      const chatInput = document.getElementById("chatInput");
+      const sendBtn = document.getElementById("sendBtn");
+      let messages = [];
+
+      function addMsg(role, text) {
+        const isUser = role === "user";
+        const div = document.createElement("div");
+        div.className = "msg " + (isUser ? "user" : "ai");
+        div.innerHTML =
+          (isUser
+            ? ""
+            : '<div class="msg-avatar" style="background:rgba(188,140,255,0.15);">&#129302;</div>') +
+          '<div class="msg-bubble">' +
+          text.replace(/\n/g, "<br>") +
+          "</div>" +
+          (isUser
+            ? '<div class="msg-avatar" style="background:rgba(31,111,235,0.15);">&#128100;</div>'
+            : "");
+        chatArea.appendChild(div);
+        chatArea.scrollTop = chatArea.scrollHeight;
+      }
+
+      function showTyping() {
+        const div = document.createElement("div");
+        div.className = "msg ai";
+        div.id = "typing";
+        div.innerHTML =
+          '<div class="msg-avatar" style="background:rgba(188,140,255,0.15);">&#129302;</div>' +
+          '<div class="msg-bubble" style="color:#484f58;">Analyzing threat...</div>';
+        chatArea.appendChild(div);
+        chatArea.scrollTop = chatArea.scrollHeight;
+      }
+
+      async function callClaude(userMsg) {
+        messages.push({ role: "user", content: userMsg });
+        showTyping();
+        sendBtn.disabled = true;
+
+        try {
+          const res = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": API_KEY,
+              "anthropic-version": "2023-06-01",
+            },
+            body: JSON.stringify({
+              model: "claude-sonnet-4-6",
+              max_tokens: 1000,
+              system:
+                "You are CyberGuard, an expert AI cybersecurity analyst. Analyze threats, explain logs, give remediation steps. Be concise and structured. Use bullet points. Always end with a risk level: LOW / MEDIUM / HIGH / CRITICAL.",
+              messages: messages,
+            }),
+          });
+          const data = await res.json();
+          const reply = data.content?.[0]?.text || "Could not get a response.";
+          messages.push({ role: "assistant", content: reply });
+          document.getElementById("typing")?.remove();
+          addMsg("ai", reply);
+        } catch (err) {
+          document.getElementById("typing")?.remove();
+          addMsg(
+            "ai",
+            "Error: Could not connect to Claude API. Please check your API key in ai-analyst.html.",
+          );
+        }
+        sendBtn.disabled = false;
+      }
+
+      function sendMessage() {
+        const val = chatInput.value.trim();
+        if (!val) return;
+        addMsg("user", val);
+        chatInput.value = "";
+        callClaude(val);
+      }
+
+      function quickAsk(q) {
+        chatInput.value = q;
+        sendMessage();
+      }
+
+      function handleKey(e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      }
+
+      // Auto-fill from URL param (used by dashboard table links)
+      const urlQ = new URLSearchParams(window.location.search).get("q");
+      if (urlQ) {
+        chatInput.value = decodeURIComponent(urlQ);
+        sendMessage();
+      }
+    </script>
+  </body>
+</html>

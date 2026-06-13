@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IP / URL Checker — CyberGuard</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">&#128737;</div>
+      <div class="logo-text">CyberGuard<br><span>Intelligence</span></div>
+    </div>
+    <nav>
+      <p class="nav-section">Main</p>
+      <a href="index.html" class="nav-item">&#127968; Dashboard</a>
+      <a href="ip-checker.html" class="nav-item active">&#128269; IP / URL Checker</a>
+      <p class="nav-section">AI Tools</p>
+      <a href="ai-analyst.html" class="nav-item">&#129302; AI Analyst</a>
+      <p class="nav-section">Monitor</p>
+      <a href="news.html" class="nav-item">&#128240; News Feed</a>
+      <a href="#" class="nav-item">&#128276; Alerts <span class="alert-count">3</span></a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <h1>IP / URL Reputation Checker</h1>
+    </header>
+
+    <div class="content">
+      <div class="card" style="max-width:700px;margin-bottom:1rem;">
+        <p class="card-title">&#128269; Check an IP address or URL</p>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <input class="inp" id="searchInput" placeholder="Enter IP address e.g. 185.220.101.47" />
+          <button class="btn btn-primary" onclick="runCheck()">Check</button>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <span style="font-size:11px;color:#8b949e;">Try a sample:</span>
+          <button class="action-btn" onclick="loadSample('185.220.101.47','malicious')">185.220.101.47</button>
+          <button class="action-btn" onclick="loadSample('45.83.122.9','malicious')">45.83.122.9</button>
+          <button class="action-btn" onclick="loadSample('8.8.8.8','safe')">8.8.8.8 (Google DNS)</button>
+          <button class="action-btn" onclick="loadSample('103.77.246.2','suspicious')">103.77.246.2</button>
+        </div>
+      </div>
+
+      <!-- Result box (hidden until check) -->
+      <div class="card" id="resultBox" style="max-width:700px;display:none;">
+        <div id="resultHeader" style="display:flex;align-items:center;gap:14px;padding:12px;border-radius:8px;margin-bottom:14px;">
+          <div id="resultIcon" style="font-size:28px;"></div>
+          <div style="flex:1;">
+            <div id="resultTitle" style="font-size:15px;font-weight:600;"></div>
+            <div id="resultSub" style="font-size:12px;color:#8b949e;margin-top:2px;"></div>
+          </div>
+          <div style="text-align:right;">
+            <div id="abuseScore" style="font-size:24px;font-weight:600;"></div>
+            <div style="font-size:10px;color:#8b949e;">abuse confidence</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;" id="detailGrid"></div>
+
+        <p class="section-label">Threat categories</p>
+        <div id="tagRow" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;"></div>
+
+        <p class="section-label">Recent abuse reports</p>
+        <div id="reportsList" style="margin-bottom:14px;"></div>
+
+        <button class="btn btn-purple" style="width:100%;" id="aiBtn" onclick="askAI()">
+          &#129302; Ask AI to explain this threat
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+let currentIP = '', currentVerdict = '';
+
+const mockData = {
+  malicious: {
+    score: 94, reports: 1847, isp: 'Frantech Solutions', country: 'Netherlands', usage: 'Hosting / VPN',
+    tags: [['DDoS attack','badge-red'],['Brute force','badge-red'],['Port scan','badge-yellow'],['Tor exit node','badge-blue']],
+    reportsList: [
+      { date:'2026-06-11', cat:'DDoS attack', country:'DE' },
+      { date:'2026-06-10', cat:'Brute force SSH', country:'US' },
+      { date:'2026-06-09', cat:'Port scanning', country:'FR' },
+    ],
+    color:'#f85149', bg:'rgba(248,81,73,0.1)', icon:'&#128683;', label:'Malicious', sub:'High confidence threat — block immediately'
+  },
+  suspicious: {
+    score: 47, reports: 213, isp: 'Alibaba Cloud', country: 'China', usage: 'Data Center',
+    tags: [['Port scan','badge-yellow'],['Suspicious activity','badge-yellow'],['Proxy','badge-blue']],
+    reportsList: [
+      { date:'2026-06-10', cat:'Port scanning', country:'US' },
+      { date:'2026-06-07', cat:'Suspicious traffic', country:'JP' },
+    ],
+    color:'#d29922', bg:'rgba(210,153,34,0.1)', icon:'&#9888;', label:'Suspicious', sub:'Moderate risk — monitor and investigate'
+  },
+  safe: {
+    score: 0, reports: 0, isp: 'Google LLC', country: 'United States', usage: 'Content Delivery',
+    tags: [['Trusted CDN','badge-green'],['Public DNS','badge-green']],
+    reportsList: [],
+    color:'#3fb950', bg:'rgba(63,185,80,0.1)', icon:'&#9989;', label:'Clean / Safe', sub:'No abuse reports found — appears legitimate'
+  }
+};
+
+function loadSample(ip, verdict) {
+  document.getElementById('searchInput').value = ip;
+  currentIP = ip; currentVerdict = verdict; runCheck();
+}
+
+function runCheck() {
+  const val = document.getElementById('searchInput').value.trim();
+  if (!val) return;
+  currentIP = val;
+  if (!currentVerdict) currentVerdict = val.startsWith('8.8') ? 'safe' : val.startsWith('185.') || val.startsWith('45.') ? 'malicious' : 'suspicious';
+  setTimeout(() => showResult(currentVerdict), 1000);
+  currentVerdict = '';
+}
+
+function showResult(verdict) {
+  const d = mockData[verdict] || mockData.suspicious;
+  const box = document.getElementById('resultBox');
+  box.style.display = 'block';
+
+  document.getElementById('resultHeader').style.background = d.bg;
+  document.getElementById('resultIcon').innerHTML = d.icon;
+  document.getElementById('resultTitle').innerHTML = '<span style="color:'+d.color+'">'+d.label+'</span> &mdash; '+currentIP;
+  document.getElementById('resultSub').textContent = d.sub;
+  document.getElementById('abuseScore').style.color = d.color;
+  document.getElementById('abuseScore').textContent = d.score + '%';
+
+  document.getElementById('detailGrid').innerHTML = [
+    ['Total reports', d.reports.toLocaleString()],
+    ['ISP / Owner', d.isp],
+    ['Country', d.country],
+    ['Usage type', d.usage]
+  ].map(([k,v]) => `<div class="stat-card"><p class="stat-label">${k}</p><p style="font-size:13px;color:#e6edf3;font-weight:500;">${v}</p></div>`).join('');
+
+  document.getElementById('tagRow').innerHTML = d.tags.map(([label,cls]) =>
+    `<span class="badge ${cls}">${label}</span>`).join('');
+
+  document.getElementById('reportsList').innerHTML = d.reportsList.length
+    ? d.reportsList.map(r => `<div style="display:flex;gap:10px;padding:8px;background:#0d1117;border-radius:6px;margin-bottom:6px;font-size:12px;"><span style="color:#484f58;font-family:monospace;">${r.date}</span><span style="flex:1;">${r.cat}</span><span style="color:#8b949e;">${r.country}</span></div>`).join('')
+    : '<p style="font-size:12px;color:#484f58;">No abuse reports found.</p>';
+}
+
+function askAI() {
+  window.location.href = 'ai-analyst.html?q=Analyze+IP+' + encodeURIComponent(currentIP) + '+with+abuse+score';
+}
+</script>
+</body>
+</html>
